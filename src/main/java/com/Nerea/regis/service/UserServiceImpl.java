@@ -3,15 +3,22 @@ package com.Nerea.regis.service;
 import com.Nerea.regis.entities.Films;
 import com.Nerea.regis.entities.User;
 import com.Nerea.regis.repository.UserRepository;
+import com.Nerea.regis.security.dto.MessageResponse;
+import com.Nerea.regis.security.dto.UserUpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService{
+    @Autowired
+    private PasswordEncoder encoder;
 
     private final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -53,6 +60,17 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public ResponseEntity<MessageResponse> updateUser(String email, UserUpdateRequest request) {
+        log.info("Updated user name and password");
+        this.userRepository.findByEmail(email).ifPresent(user -> {
+            user.setUsername(request.getUsername());
+            user.setPassword(encoder.encode(request.getPassword()));
+            this.userRepository.save(user);
+        });
+        return ResponseEntity.ok(new MessageResponse("User updated!"));
+    }
+
+    @Override
     public List<Films> getPendientes(String email) {
         log.info("Get list of Pendientes from user");
         return this.userRepository.findPendientesBy(email);
@@ -71,28 +89,30 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void updatePendientes(String email, List<Films> pendientes) {
+    public ResponseEntity<MessageResponse> updatePendientes(String email, List<Films> pendientes) {
         this.userRepository.findByEmail(email).ifPresent(user -> {
             user.setPendientes(pendientes);
             this.userRepository.save(user);
         });
-
+        return ResponseEntity.ok(new MessageResponse("List Pendientes updated!"));
     }
 
     @Override
-    public void updateFavoritas(String email, List<Films> favoritas) {
+    public ResponseEntity<MessageResponse> updateFavoritas(String email, List<Films> favoritas) {
         this.userRepository.findByEmail(email).ifPresent(user -> {
             user.setFavoritas(favoritas);
             this.userRepository.save(user);
         });
+        return ResponseEntity.ok(new MessageResponse("List Favoritas updated!"));
     }
 
     @Override
-    public void updateVistas(String email, List<Films> vistas) {
+    public ResponseEntity<MessageResponse> updateVistas(String email, List<Films> vistas) {
         this.userRepository.findByEmail(email).ifPresent(user -> {
             user.setVistas(vistas);
             this.userRepository.save(user);
         });
+        return ResponseEntity.ok(new MessageResponse("List Vistas updated!"));
     }
 
 }
